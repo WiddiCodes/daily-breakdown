@@ -1,0 +1,1066 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Daily Breakdown</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#f7f6f3; --card:#ffffff; --ink:#1d1d1f; --muted:#6b6b70; --line:#e6e4df;
+    --c1:#3b6fd8; --c2:#2a9d8f; --c3:#e08a2c; --c4:#8a5cd1; --c5:#d4537e; --c6:#c2502e; --c7:#4a9a3c;
+  }
+  @media (prefers-color-scheme: dark){
+    :root{ --bg:#151517; --card:#1f1f22; --ink:#f2f2f4; --muted:#a0a0a8; --line:#2e2e33; }
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:Inter,system-ui,-apple-system,sans-serif;line-height:1.45}
+  .wrap{max-width:760px;margin:0 auto;padding:28px 18px 48px}
+  h1{font-size:22px;margin:0 0 4px;font-weight:700;letter-spacing:-.01em}
+  .sub{color:var(--muted);font-size:14px;margin:0 0 20px}
+  .tabs{display:flex;gap:6px;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:4px;margin-bottom:18px}
+  .tab{flex:1;border:0;background:transparent;color:var(--muted);font:inherit;font-weight:600;font-size:14px;padding:10px;border-radius:9px;cursor:pointer}
+  .tab[aria-selected="true"]{background:var(--ink);color:var(--bg)}
+  .bar{display:flex;height:14px;border-radius:7px;overflow:hidden;margin:0 0 6px;gap:2px}
+  .bar span{display:block;height:100%}
+  .scale{display:flex;justify-content:space-between;color:var(--muted);font-size:12px;margin-bottom:18px}
+  .list{display:flex;flex-direction:column;gap:10px}
+  .item{display:flex;gap:14px;align-items:flex-start;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px 16px;cursor:pointer;transition:opacity .15s}
+  .item.done{opacity:.5}
+  .item.done .name{text-decoration:line-through}
+  .hrs{flex:0 0 64px;font-weight:700;font-size:20px;font-variant-numeric:tabular-nums}
+  .hrs small{display:block;font-size:11px;font-weight:500;color:var(--muted);margin-top:-2px}
+  .body{flex:1;min-width:0}
+  .name{font-weight:600;font-size:15px}
+  .detail{color:var(--muted);font-size:13.5px;margin-top:2px}
+  .time{color:var(--muted);font-size:12px;margin-top:6px;font-variant-numeric:tabular-nums}
+  .weeks{display:flex;gap:6px;margin-top:6px;flex-wrap:wrap}
+  .pill{font-size:12px;border:1px solid var(--line);border-radius:999px;padding:2px 9px;color:var(--muted)}
+  .check{flex:0 0 22px;height:22px;border-radius:6px;border:2px solid var(--line);margin-top:3px;display:grid;place-items:center}
+  .item.done .check{background:var(--ink);border-color:var(--ink)}
+  .item.done .check::after{content:"";width:6px;height:11px;border:solid var(--bg);border-width:0 2px 2px 0;transform:rotate(45deg) translate(-1px,-1px)}
+  .dot{width:10px;height:10px;border-radius:50%;display:inline-block;margin-right:8px;vertical-align:1px}
+  .foot{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-top:18px;flex-wrap:wrap}
+  .foot label{font-size:13px;color:var(--muted);display:flex;align-items:center;gap:8px}
+  .foot input{font:inherit;font-size:13px;padding:6px 8px;border:1px solid var(--line);border-radius:8px;background:var(--card);color:var(--ink)}
+  .reset{font:inherit;font-size:13px;background:none;border:1px solid var(--line);color:var(--muted);border-radius:8px;padding:6px 12px;cursor:pointer}
+  .progress{font-size:13px;color:var(--muted)}
+
+  .compare h2{font-size:15px;margin:0 0 10px}
+  .compare .item{cursor:default;padding:12px}
+  .compare .hrs{flex-basis:44px;font-size:16px}
+  .wrap.wide{max-width:1080px}
+  .compare{display:grid;grid-template-columns:repeat(var(--cols,3),1fr);gap:14px}
+  .phase-tag{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin:0 0 10px;font-weight:600}
+  .week{display:flex;gap:6px;margin:0 0 6px}
+  .wday{flex:1;text-align:center;font-size:12px;color:var(--muted);background:var(--card);border:1px solid var(--line);border-radius:8px;padding:6px 0}
+  .wday.today{border-color:var(--ink);color:var(--ink);font-weight:600}
+  .wdots{display:flex;justify-content:center;gap:3px;margin-top:4px}
+  .wday i{display:block;width:8px;height:8px;border-radius:50%;background:var(--line)}
+  .legend{font-size:12.5px;color:var(--muted);margin:0 0 16px}
+  .card{background:var(--card);border:1px solid var(--line);border-left:4px solid var(--line);border-radius:12px;padding:14px 16px;margin-top:18px}
+  .card.ok{border-left-color:var(--c7)} .card.due{border-left-color:var(--c3)} .card.late{border-left-color:var(--c6)}
+  .card-h{display:flex;justify-content:space-between;align-items:center;gap:8px}
+  .status{font-size:14px;margin:10px 0}
+  .lbl{font-size:13px;color:var(--muted);display:flex;align-items:center;gap:8px}
+  .lbl input{font:inherit;font-size:13px;padding:6px 8px;border:1px solid var(--line);border-radius:8px;background:var(--card);color:var(--ink)}
+  @media (max-width:860px){.compare{grid-template-columns:1fr}}
+  .timer{position:sticky;top:0;z-index:5;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px 16px;margin-bottom:18px;box-shadow:0 4px 16px rgba(0,0,0,.06)}
+  .t-top{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+  .t-clock{font-size:38px;font-weight:700;font-variant-numeric:tabular-nums;letter-spacing:-.02em;min-width:130px;line-height:1}
+  .t-label{font-size:12.5px;color:var(--muted);margin-top:4px;min-height:1em}
+  .t-btns{display:flex;gap:6px;margin-left:auto}
+  .t-btn{font:inherit;font-size:14px;font-weight:600;border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:9px;padding:8px 14px;cursor:pointer}
+  .t-btn.primary{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+  .t-prog{height:4px;background:var(--line);border-radius:2px;margin:12px 0 10px;overflow:hidden}
+  .t-prog i{display:block;height:100%;width:0;background:var(--ink);transition:width .3s linear}
+  .t-presets{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+  .chip{font:inherit;font-size:12.5px;border:1px solid var(--line);background:transparent;color:var(--muted);border-radius:999px;padding:4px 10px;cursor:pointer}
+  .chip.on{border-color:var(--ink);color:var(--ink);font-weight:600}
+  .t-custom{display:flex;align-items:center;gap:4px;font-size:12.5px;color:var(--muted)}
+  .t-custom input{width:56px;font:inherit;font-size:12.5px;padding:4px 6px;border:1px solid var(--line);border-radius:8px;background:var(--card);color:var(--ink)}
+  .timer.finished{border-color:var(--c6);animation:pulse 1s ease-in-out 6}
+  .timer.finished .t-clock{color:var(--c6)}
+  @keyframes pulse{50%{box-shadow:0 0 0 6px rgba(194,80,46,.25)}}
+  .t-done{display:none;margin-top:10px;font-size:13.5px;align-items:center;gap:10px;flex-wrap:wrap}
+  .timer.finished .t-done{display:flex}
+  .tbtn{font:inherit;font-size:12px;font-weight:600;border:1px solid var(--line);background:transparent;color:var(--muted);border-radius:8px;padding:4px 9px;cursor:pointer;margin-top:8px}
+  .tbtn:hover{color:var(--ink);border-color:var(--ink)}
+  .compare .tbtn{display:none}
+  .tabs{display:grid;grid-template-columns:repeat(var(--tabs,6),1fr)}
+  .tab{padding:10px 4px}
+  @media (max-width:560px){.tabs{grid-template-columns:repeat(3,1fr)}}
+  .head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap}
+  .status-pill{font:inherit;font-size:12px;font-weight:600;border:1px solid var(--line);background:var(--card);color:var(--muted);border-radius:999px;padding:5px 11px;cursor:pointer;white-space:nowrap}
+  .status-pill.ok{color:var(--c7);border-color:var(--c7)}
+  .status-pill.warn{color:var(--c3);border-color:var(--c3)}
+  .status-pill.err{color:var(--c6);border-color:var(--c6)}
+  .row-btns{display:flex;gap:6px;flex-wrap:wrap}
+  .btn{font:inherit;font-size:13px;font-weight:600;border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:9px;padding:7px 12px;cursor:pointer}
+  .btn.primary{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+  .btn.small{font-size:12px;padding:4px 9px;border-radius:8px}
+  .btn.danger{color:var(--c6)}
+  .btn:disabled{opacity:.5;cursor:default}
+  .sec{margin-top:26px}
+  .sec h2{font-size:15px;margin:0 0 10px;display:flex;align-items:center;justify-content:space-between;gap:8px}
+  .sec h2 small{font-weight:500;color:var(--muted);font-size:12.5px}
+  .muted{color:var(--muted)}
+  .tiles{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+  @media (max-width:560px){.tiles{grid-template-columns:repeat(2,1fr)}}
+  .tile{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px 14px}
+  .tile b{display:block;font-size:24px;font-variant-numeric:tabular-nums;line-height:1.1}
+  .tile span{font-size:12px;color:var(--muted)}
+  .heat{display:flex;gap:3px;overflow-x:auto;padding-bottom:4px}
+  .heat-col{display:flex;flex-direction:column;gap:3px}
+  .heat-cell{width:14px;height:14px;border-radius:3px;background:var(--line)}
+  .heat-cell.l1{background:color-mix(in srgb,var(--c1) 30%,var(--line))}
+  .heat-cell.l2{background:color-mix(in srgb,var(--c1) 55%,var(--line))}
+  .heat-cell.l3{background:color-mix(in srgb,var(--c1) 80%,var(--line))}
+  .heat-cell.l4{background:var(--c1)}
+  .heat-cell.future{background:transparent}
+  .heat-cell.is-today{outline:2px solid var(--ink);outline-offset:-1px}
+  .heat-legend{display:flex;align-items:center;gap:4px;font-size:11.5px;color:var(--muted);margin-top:6px}
+  .heat-legend .heat-cell{width:11px;height:11px}
+  .cat-row{display:grid;grid-template-columns:130px 1fr 110px;gap:10px;align-items:center;font-size:13px;margin-bottom:8px}
+  .cat-bar{height:10px;border-radius:5px;background:var(--line);overflow:hidden}
+  .cat-bar i{display:block;height:100%}
+  .cat-row .num{text-align:right;color:var(--muted);font-variant-numeric:tabular-nums;font-size:12.5px}
+  @media (max-width:560px){.cat-row{grid-template-columns:100px 1fr 80px}}
+  .table{width:100%;border-collapse:collapse;font-size:13px}
+  .table td,.table th{text-align:left;padding:7px 6px;border-bottom:1px solid var(--line);vertical-align:top}
+  .table th{color:var(--muted);font-weight:600;font-size:12px}
+  .seg{display:inline-flex;border:1px solid var(--line);border-radius:9px;overflow:hidden}
+  .seg button{font:inherit;font-size:12.5px;border:0;background:var(--card);color:var(--muted);padding:5px 10px;cursor:pointer}
+  .seg button.on{background:var(--ink);color:var(--bg)}
+  .toolbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:12px}
+  .toolbar input[type=search]{flex:1;min-width:160px;font:inherit;font-size:13.5px;padding:7px 10px;border:1px solid var(--line);border-radius:9px;background:var(--card);color:var(--ink)}
+  .prob{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin-bottom:8px}
+  .prob-top{display:flex;justify-content:space-between;gap:10px;align-items:flex-start}
+  .prob a{color:var(--ink);font-weight:600;text-decoration:none;border-bottom:1px solid var(--line)}
+  .prob a:hover{border-color:var(--ink)}
+  .prob .meta{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px;align-items:center;font-size:12px;color:var(--muted)}
+  .prob .notes{font-size:13px;color:var(--muted);margin-top:6px;white-space:pre-wrap}
+  .badge{font-size:11.5px;font-weight:600;border-radius:6px;padding:2px 7px;background:var(--line);color:var(--ink)}
+  .badge.Easy{background:color-mix(in srgb,var(--c7) 22%,transparent);color:var(--c7)}
+  .badge.Medium{background:color-mix(in srgb,var(--c3) 22%,transparent);color:var(--c3)}
+  .badge.Hard{background:color-mix(in srgb,var(--c6) 22%,transparent);color:var(--c6)}
+  .badge.sd{background:color-mix(in srgb,var(--c2) 22%,transparent);color:var(--c2)}
+  .badge.dsa{background:color-mix(in srgb,var(--c1) 22%,transparent);color:var(--c1)}
+  .tag{font-size:11.5px;border:1px solid var(--line);border-radius:999px;padding:1px 8px;cursor:pointer;background:transparent;color:var(--muted);font-family:inherit}
+  .tag.on{border-color:var(--ink);color:var(--ink)}
+  .due{border-left:4px solid var(--c3)}
+  .empty{background:var(--card);border:1px dashed var(--line);border-radius:12px;padding:18px;text-align:center;color:var(--muted);font-size:13.5px}
+  .overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);display:none;align-items:flex-start;justify-content:center;z-index:50;overflow-y:auto;padding:24px 12px}
+  .overlay.open{display:flex}
+  .modal{background:var(--card);color:var(--ink);border-radius:14px;padding:18px;width:100%;max-width:480px;box-shadow:0 20px 60px rgba(0,0,0,.3)}
+  .modal h3{margin:0 0 12px;font-size:17px}
+  .field{display:flex;flex-direction:column;gap:4px;margin-bottom:11px;font-size:12.5px;color:var(--muted);font-weight:600}
+  .field input,.field textarea,.field select{font:inherit;font-size:14px;font-weight:400;padding:8px 10px;border:1px solid var(--line);border-radius:9px;background:var(--bg);color:var(--ink)}
+  .field textarea{min-height:70px;resize:vertical}
+  .two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .modal .actions{display:flex;justify-content:flex-end;gap:8px;margin-top:6px}
+  .check-line{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--ink);font-weight:500;margin-bottom:11px}
+  .notice{font-size:13px;background:color-mix(in srgb,var(--c3) 14%,var(--card));border:1px solid color-mix(in srgb,var(--c3) 40%,var(--line));border-radius:10px;padding:10px 12px;margin-bottom:14px;display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap}
+  .nostick .timer{position:static}
+  .item-actions{display:flex;gap:6px;flex-wrap:wrap}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="head">
+    <div>
+      <h1 id="appName">🕒 Daily Breakdown</h1>
+      <p class="sub">Pick a phase, tap a block to check it off, use ⏱ to time it, and 📝 to log problems.</p>
+    </div>
+    <button class="status-pill" id="statusPill" title="Where your history is saved">…</button>
+  </div>
+
+  <div class="tabs" role="tablist" id="tabs"></div>
+
+  <div id="notice"></div>
+
+  <div class="timer" id="timer">
+    <div class="t-top">
+      <div>
+        <div class="t-clock" id="tClock">25:00</div>
+        <div class="t-label" id="tLabel">Countdown timer</div>
+      </div>
+      <div class="t-btns">
+        <button class="t-btn primary" id="tStart">Start</button>
+        <button class="t-btn" id="tPlus" title="Add 1 minute">+1m</button>
+        <button class="t-btn" id="tReset">Reset</button>
+      </div>
+    </div>
+    <div class="t-prog"><i id="tBar"></i></div>
+    <div class="t-presets" id="tPresets">
+      <span class="t-custom"><input type="number" id="tCustom" min="1" max="600" placeholder="min"> min</span>
+      <button class="chip" id="tLog" title="Log the problem you just worked on">📝 Log problem</button>
+    </div>
+    <div class="t-done"><strong>⏰ Time's up!</strong><button class="t-btn" id="tMark" style="display:none">Mark block done</button><button class="t-btn" id="tLog2">📝 Log problem</button><button class="t-btn" id="tDismiss">Dismiss</button></div>
+  </div>
+
+  <div id="view"></div>
+</div>
+
+<div class="overlay" id="overlay"><div class="modal" id="modal"></div></div>
+<input type="file" id="importFile" accept=".json,application/json" style="display:none">
+
+<script>
+/* =====================================================================
+   ✏️  CONFIG: the only part of this file you need to edit.
+
+   Change it, save the file, and reload the page. README.md has a
+   step-by-step tutorial ("Customizing your phases").
+
+   Rules of thumb
+   • Every block needs a unique `id`. Once you have history, don't
+     rename ids, or old check-offs won't be counted for that block.
+   • `hours` can be fractional: 0.25 = 15 min, 0.5 = 30 min, 0.75 = 45 min.
+   • `category` must be one of the keys in `categories` below.
+   • `days` (optional) limits a block to certain weekdays,
+     e.g. ["Tue", "Thu"]. Leave it out for every day.
+   • If something is wrong, the page shows a red box saying what.
+   ===================================================================== */
+const CONFIG = {
+  appName: "Daily Breakdown",
+
+  // Used to keep this copy's saved data separate. Change it if you run
+  // two different copies of the page in the same browser.
+  storageId: "daily-breakdown",
+
+  // Quick-pick buttons on the countdown timer, in minutes.
+  timerPresets: [5, 15, 20, 25, 30, 35, 45, 60, 90],
+
+  // Problems you needed help with come back for review after these many days.
+  reviewSteps: [3, 7, 30],
+
+  // "Stay interview-ready" tracker: aim for an interview every min–max days.
+  interviewEvery: { min: 30, max: 90 },
+
+  // Categories group blocks for the History stats and give them a color.
+  //   log: "dsa" → blocks in this category get a "Log problem" button
+  //   log: "sd"  → blocks in this category get a "Log design" button
+  categories: {
+    dsa:  { name: "DSA / LeetCode",     color: "#3b6fd8", log: "dsa" },
+    sd:   { name: "System Design",      color: "#2a9d8f", log: "sd"  },
+    beh:  { name: "Behavioral",         color: "#d4537e" },
+    apps: { name: "Applications",       color: "#e08a2c" },
+    net:  { name: "Networking & Pipeline", color: "#8a5cd1" },
+    lang: { name: "Language",           color: "#c2502e" },
+    cs:   { name: "CS Fundamentals",    color: "#4a9a3c" },
+  },
+
+  // Phases appear as tabs, in this order.
+  phases: [
+    {
+      id: "p1",
+      title: "Phase 1",
+      subtitle: "Job search: build the foundation",
+      start: "08:00",                       // default start time (24h)
+      blocks: [
+        { id: "p1-beh",  category: "beh",  hours: 0.5, name: "Behavioral Stories",
+          detail: "Write your STAR stories in week 1, then review and tighten them",
+          labels: ["Week 1: write", "Weeks 2–3: review & tweak"] },
+        { id: "p1-dsa",  category: "dsa",  hours: 2,   name: "Data Structures & Algorithms",
+          detail: "Focused topic mastery: one pattern at a time" },
+        { id: "p1-sd",   category: "sd",   hours: 1.5, name: "System Design",
+          detail: "Learn the building blocks and study classic design problems" },
+        { id: "p1-apps", category: "apps", hours: 1,   name: "Tailored Applications",
+          detail: "Target 2–3 high-fit roles per day" },
+        { id: "p1-net",  category: "net",  hours: 0.5, name: "Networking & Referrals",
+          detail: "Warm outreach and referral requests" },
+        { id: "p1-lang", category: "lang", hours: 1,   name: "Learn a Language",
+          detail: "Deliberate practice in the language you're learning (Rust, Go, TypeScript…)" },
+        { id: "p1-cs",   category: "cs",   hours: 1,   name: "CS Fundamentals",
+          detail: "Work through a course or book: OS, networking, databases, compilers…" },
+      ],
+    },
+    {
+      id: "p2",
+      title: "Phase 2",
+      subtitle: "Job search: interview mode",
+      start: "08:00",
+      blocks: [
+        { id: "p2-dsa",  category: "dsa",  hours: 2.5, name: "Timed DSA Practice",
+          detail: "Unseen mixed Mediums under a 35-minute timer" },
+        { id: "p2-sd",   category: "sd",   hours: 1.5, name: "System Design Mocks",
+          detail: "Whiteboard full designs end to end, out loud" },
+        { id: "p2-pipe", category: "net",  hours: 1.5, name: "Interview Pipeline",
+          detail: "Scheduling, recruiter calls, company-specific prep" },
+        { id: "p2-apps", category: "apps", hours: 1,   name: "Targeted Applications",
+          detail: "Only fresh, high-priority listings" },
+        { id: "p2-lang", category: "lang", hours: 1,   name: "Learn a Language",
+          detail: "Deliberate practice in the language you're learning" },
+        { id: "p2-cs",   category: "cs",   hours: 1,   name: "CS Fundamentals",
+          detail: "Keep moving through your course or book" },
+      ],
+    },
+    {
+      id: "p3",
+      title: "Phase 3",
+      subtitle: "After you land the job: stay sharp",
+      start: "18:00",
+      showInterviewTracker: true,           // shows the "interview every 1–3 months" card
+      blocks: [
+        { id: "p3-dsa",  category: "dsa",  hours: 0.5,  name: "Daily DSA",
+          detail: "At least 1 problem a day: keep the streak alive" },
+        { id: "p3-lang", category: "lang", hours: 1,    name: "Learn a Language",
+          detail: "Build something real in the language you're learning" },
+        { id: "p3-cs",   category: "cs",   hours: 1,    name: "CS Fundamentals",
+          detail: "Finish courses and books you've started" },
+        { id: "p3-sd",   category: "sd",   hours: 0.75, name: "System Design",
+          detail: "Review one design or do a solo whiteboard walkthrough",
+          days: ["Tue", "Thu"] },
+      ],
+    },
+  ],
+};
+/* =========================== end of CONFIG =========================== */
+
+/* ================= Read the config (you shouldn't need to edit below) ================= */
+const DAYS = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
+const RESERVED_VIEWS = ["problems", "history", "compare"];
+const CONFIG_ERRORS = [];
+const CATS = {}, PHASES = {}, BLOCKS = {};
+(() => {
+  const err = m => CONFIG_ERRORS.push(m);
+  const cats = CONFIG.categories || {};
+  Object.entries(cats).forEach(([k, c]) => {
+    if (!c || !c.name) err(`Category "${k}" needs a name.`);
+    CATS[k] = { name: (c && c.name) || k, c: (c && c.color) || "#888888", log: c && (c.log === "dsa" || c.log === "sd") ? c.log : null };
+  });
+  if (!Object.keys(CATS).length) err("Add at least one entry to categories.");
+  const phases = Array.isArray(CONFIG.phases) ? CONFIG.phases : [];
+  if (!phases.length) err("Add at least one phase to phases.");
+  phases.forEach((ph, pi) => {
+    const pid = ph && ph.id;
+    if (!pid || !/^[A-Za-z0-9_-]+$/.test(pid)) { err(`Phase #${pi + 1} needs an id made of letters, numbers, - or _.`); return; }
+    if (RESERVED_VIEWS.includes(pid)) { err(`Phase id "${pid}" is reserved. Pick another one.`); return; }
+    if (PHASES[pid]) { err(`Two phases use the id "${pid}".`); return; }
+    const out = { id: pid, title: ph.title || pid, tag: ph.subtitle || "", start: /^\d{1,2}:\d{2}$/.test(ph.start || "") ? ph.start.padStart(5, "0") : "08:00",
+      interview: !!ph.showInterviewTracker, blocks: [] };
+    (ph.blocks || []).forEach((b, bi) => {
+      const where = `Block #${bi + 1} in "${out.title}"`;
+      if (!b || !b.id) { err(`${where} needs an id.`); return; }
+      if (BLOCKS[b.id]) { err(`Two blocks use the id "${b.id}". Every block id must be unique.`); return; }
+      if (!CATS[b.category]) { err(`${where} ("${b.id}") has category "${b.category}", which isn't in categories.`); return; }
+      const h = Number(b.hours);
+      if (!(h > 0)) { err(`${where} ("${b.id}") needs hours greater than 0.`); return; }
+      let days = null;
+      if (b.days != null) {
+        days = [].concat(b.days).map(d => typeof d === "number" ? d : DAYS.findIndex(x => x.toLowerCase() === String(d).slice(0, 3).toLowerCase()));
+        if (days.some(d => !(d >= 0 && d <= 6))) { err(`${where} ("${b.id}") has days I don't recognize. Use names like "Mon", "Tue".`); days = null; }
+      }
+      const blk = { id: b.id, cat: b.category, h, name: b.name || b.id, detail: b.detail || "", weeks: Array.isArray(b.labels) && b.labels.length ? b.labels : null,
+        days, c: CATS[b.category].c };
+      out.blocks.push(blk);
+      BLOCKS[b.id] = { ...blk, p: pid, i: out.blocks.length - 1 };
+    });
+    if (!out.blocks.length) err(`Phase "${out.title}" has no valid blocks.`);
+    PHASES[pid] = out;
+  });
+  if (!Object.keys(PHASES).length) PHASES.p1 = { id: "p1", title: "Phase 1", tag: "", start: "08:00", blocks: [], interview: false };
+})();
+const PHASE_IDS = Object.keys(PHASES);
+const REVIEW_STEPS = (Array.isArray(CONFIG.reviewSteps) && CONFIG.reviewSteps.every(n => n > 0) && CONFIG.reviewSteps.length) ? CONFIG.reviewSteps : [3, 7, 30];
+const INTERVIEW_MIN = (CONFIG.interviewEvery && CONFIG.interviewEvery.min) || 30, INTERVIEW_MAX = (CONFIG.interviewEvery && CONFIG.interviewEvery.max) || 90;
+const STORAGE_ID = String(CONFIG.storageId || "daily-breakdown");
+const APP_NAME = CONFIG.appName || "Daily Breakdown";
+
+
+/* ================= Small helpers ================= */
+const local = {
+  get(k, d){ try { const v = localStorage.getItem(STORAGE_ID + ":" + k); return v === null ? d : JSON.parse(v); } catch(e){ return d; } },
+  set(k, v){ try { localStorage.setItem(STORAGE_ID + ":" + k, JSON.stringify(v)); } catch(e){} },
+};
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;" }[c]));
+const safeUrl = u => /^https?:\/\//i.test(u || "") ? u : "";
+const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+const ymd = d => d.getFullYear() + "-" + String(d.getMonth()+1).padStart(2,"0") + "-" + String(d.getDate()).padStart(2,"0");
+const todayStr = () => ymd(new Date());
+const parseDay = s => new Date(s + "T00:00:00");
+const addDays = (s, n) => { const d = parseDay(s); d.setDate(d.getDate() + n); return ymd(d); };
+const daysBetween = (a, b) => Math.round((parseDay(b) - parseDay(a)) / 86400000);
+const prettyDate = s => parseDay(s).toLocaleDateString(undefined, { month:"short", day:"numeric", year: s.slice(0,4) === todayStr().slice(0,4) ? undefined : "numeric" });
+function fmt(mins){ let h = Math.floor(mins/60)%24, m = Math.round(mins%60); const ap = h >= 12 ? "pm" : "am"; h = h%12 || 12; return h + ":" + String(m).padStart(2,"0") + " " + ap; }
+function hrs(x){ return Number.isInteger(x) ? x.toFixed(1) : String(+x.toFixed(2)); }
+function dur(sec){ const m = Math.round(sec/60); return m >= 60 ? Math.floor(m/60) + "h " + (m%60) + "m" : m + "m"; }
+function dayLabel(days){ return days.map(d => DAYS[d]).join(" & "); }
+function titleFromUrl(u){
+  try {
+    const x = new URL(u);
+    const parts = x.pathname.split("/").filter(Boolean);
+    const i = parts.indexOf("problems");
+    let slug = i >= 0 && parts[i+1] ? parts[i+1] : (parts[parts.length-1] || x.hostname);
+    slug = decodeURIComponent(slug).replace(/\.[a-z0-9]+$/i, "");
+    return slug.split(/[-_]+/).filter(Boolean).map(w => w[0].toUpperCase() + w.slice(1)).join(" ");
+  } catch(e){ return ""; }
+}
+
+/* ================= Data store ================= */
+const DB_KEY = "db-v1";
+const emptyDB = () => ({ version:1, updatedAt:0, days:{}, problems:[], sessions:[], interviews:[] });
+let db = local.get(DB_KEY, null);
+if (!db || !db.days) { db = emptyDB(); local.set(DB_KEY, db); }
+
+function mergeDB(a, b){
+  const out = emptyDB();
+  out.updatedAt = Math.max(a.updatedAt || 0, b.updatedAt || 0);
+  const dates = new Set([...Object.keys(a.days || {}), ...Object.keys(b.days || {})]);
+  dates.forEach(d => {
+    const A = (a.days || {})[d] || {}, B = (b.days || {})[d] || {};
+    out.days[d] = {};
+    new Set([...Object.keys(A), ...Object.keys(B)]).forEach(p => {
+      const x = A[p], y = B[p];
+      out.days[d][p] = !x ? y : !y ? x : ((x.t || 0) >= (y.t || 0) ? x : y);
+    });
+  });
+  ["problems", "sessions", "interviews"].forEach(k => {
+    const map = new Map();
+    [...(a[k] || []), ...(b[k] || [])].forEach(r => { const cur = map.get(r.id); if (!cur || (r.t || 0) > (cur.t || 0)) map.set(r.id, r); });
+    out[k] = [...map.values()];
+  });
+  return out;
+}
+function serialize(d){
+  const days = {};
+  Object.keys(d.days || {}).sort().forEach(k => { days[k] = {}; Object.keys(d.days[k]).sort().forEach(p => days[k][p] = d.days[k][p]); });
+  const byId = arr => [...(arr || [])].sort((x, y) => (x.id < y.id ? -1 : x.id > y.id ? 1 : 0));
+  return JSON.stringify({ version:1, app:"daily-breakdown", updatedAt: d.updatedAt || 0, days,
+    problems: byId(d.problems), sessions: byId(d.sessions), interviews: byId(d.interviews) }, null, 1);
+}
+
+/* ---- history.json on disk (File System Access API: Chrome / Edge) ---- */
+const IN_FRAME = (() => { try { return window.self !== window.top; } catch(e) { return true; } })();
+const FS_SUPPORTED = "showSaveFilePicker" in window && "showOpenFilePicker" in window && !IN_FRAME;
+let fileHandle = null, fileState = FS_SUPPORTED ? "none" : "unsupported", fileErr = "", lastSync = 0;
+let chain = Promise.resolve(), writeTimer = null;
+
+function idb(){ return new Promise((res, rej) => { const r = indexedDB.open(STORAGE_ID, 1); r.onupgradeneeded = () => r.result.createObjectStore("kv"); r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error); }); }
+async function idbGet(k){ const d = await idb(); return new Promise((res, rej) => { const q = d.transaction("kv").objectStore("kv").get(k); q.onsuccess = () => res(q.result); q.onerror = () => rej(q.error); }); }
+async function idbSet(k, v){ const d = await idb(); return new Promise((res, rej) => { const tx = d.transaction("kv", "readwrite"); v === undefined ? tx.objectStore("kv").delete(k) : tx.objectStore("kv").put(v, k); tx.oncomplete = () => res(); tx.onerror = () => rej(tx.error); }); }
+
+function save(){
+  db.updatedAt = Date.now();
+  local.set(DB_KEY, db);
+  if (fileHandle && fileState === "ok") { clearTimeout(writeTimer); writeTimer = setTimeout(sync, 400); }
+}
+function sync(){
+  if (!fileHandle) return chain;
+  chain = chain.then(async () => {
+    try {
+      const f = await fileHandle.getFile();
+      const txt = await f.text();
+      let other = null;
+      if (txt.trim()) {
+        try { other = JSON.parse(txt); } catch(e) { fileState = "error"; fileErr = "history.json isn't valid JSON, so I won't overwrite it. Fix or replace the file, then reconnect."; updateStatus(); return; }
+        if (!other || typeof other !== "object" || !other.days) { fileState = "error"; fileErr = "That file doesn't look like a Daily Breakdown history file."; updateStatus(); return; }
+      }
+      const before = serialize(db);
+      const merged = other ? mergeDB(db, other) : db;
+      const out = serialize(merged);
+      const changedHere = out !== before;
+      db = merged; local.set(DB_KEY, db);
+      if (!other || out !== serialize(other)) {
+        const w = await fileHandle.createWritable();
+        await w.write(out); await w.close();
+      }
+      fileState = "ok"; fileErr = ""; lastSync = Date.now();
+      if (changedHere) render(); else updateStatus();
+    } catch(e) {
+      fileState = (e.name === "NotAllowedError" || e.name === "SecurityError") ? "perm" : "error";
+      fileErr = e.name === "NotFoundError" ? "history.json was moved or deleted. Reconnect or pick it again." : (e.message || String(e));
+      updateStatus();
+    }
+  });
+  return chain;
+}
+async function connectFile(mode){
+  try {
+    let h;
+    if (mode === "new") h = await window.showSaveFilePicker({ suggestedName: "history.json", types: [{ description: "Daily Breakdown history", accept: { "application/json": [".json"] } }] });
+    else [h] = await window.showOpenFilePicker({ types: [{ description: "Daily Breakdown history", accept: { "application/json": [".json"] } }] });
+    if (mode !== "new") { const p = await h.requestPermission({ mode: "readwrite" }); if (p !== "granted") throw Object.assign(new Error("Permission to save was not given."), { name: "NotAllowedError" }); }
+    fileHandle = h; fileState = "ok";
+    try { await idbSet("handle", h); } catch(e){}
+    await sync();
+    toastNotice("");
+    render();
+  } catch(e) {
+    if (e.name === "AbortError") return;
+    toastNotice(e.name === "SecurityError"
+      ? "Saving to a file isn't allowed in this window (for example on claude.ai). Use the downloaded copy of the page for that."
+      : "Couldn't connect the file: " + esc(e.message || e), true);
+  }
+}
+async function reconnect(){
+  if (!fileHandle) return connectFile("open");
+  try {
+    const p = await fileHandle.requestPermission({ mode: "readwrite" });
+    if (p === "granted") { fileState = "ok"; await sync(); render(); } else updateStatus();
+  } catch(e) { fileState = "error"; fileErr = e.message; updateStatus(); }
+}
+async function disconnectFile(){
+  fileHandle = null; fileState = FS_SUPPORTED ? "none" : "unsupported";
+  try { await idbSet("handle", undefined); } catch(e){}
+  render();
+}
+async function initFile(){
+  if (!FS_SUPPORTED) return updateStatus();
+  try {
+    const h = await idbGet("handle");
+    if (!h) return updateStatus();
+    fileHandle = h;
+    const p = await h.queryPermission({ mode: "readwrite" });
+    if (p === "granted") { fileState = "ok"; await sync(); } else { fileState = "perm"; }
+  } catch(e) { fileState = "none"; }
+  updateStatus();
+}
+window.addEventListener("focus", () => { if (fileState === "ok") sync(); });
+setInterval(() => { if (fileState === "ok" && document.visibilityState === "visible") sync(); }, 60000);
+
+function statusInfo(){
+  const name = fileHandle?.name || "history.json";
+  switch (fileState) {
+    case "ok":    return { cls:"ok",   text:"💾 Saving to " + name, tip:"Last synced " + (lastSync ? new Date(lastSync).toLocaleTimeString() : "just now") };
+    case "perm":  return { cls:"warn", text:"⚠ Reconnect " + name, tip:"Chrome needs your OK to keep saving to the file" };
+    case "error": return { cls:"err",  text:"⚠ File problem", tip: fileErr };
+    case "unsupported": return { cls:"warn", text:"Browser only", tip:"This browser can't save to a file. Use Export in History to back up." };
+    default:      return { cls:"warn", text:"Set up history file", tip:"Your history is only in this browser right now" };
+  }
+}
+function updateStatus(){
+  const s = statusInfo(), pill = $("statusPill");
+  pill.className = "status-pill " + s.cls; pill.textContent = s.text; pill.title = s.tip;
+  const n = $("notice");
+  if (fileState === "perm") n.innerHTML = `<div class="notice"><span>Chrome needs your OK to keep saving to <b>${esc(fileHandle?.name || "history.json")}</b>.</span><button class="btn small primary" data-act="reconnect">Allow</button></div>`;
+  else if (fileState === "error") n.innerHTML = `<div class="notice"><span>${esc(fileErr)}</span><button class="btn small" data-act="open-file">Pick file</button></div>`;
+  else if (fileState === "none" && !local.get("setupLater", false) && !n.dataset.toast) n.innerHTML = `<div class="notice"><span>💾 Choose where to save your history so it lives in a file you own.</span><span class="row-btns"><button class="btn small primary" data-act="new-file">Create history.json</button><button class="btn small" data-act="open-file">Open existing</button><button class="btn small" data-act="setup-later">Later</button></span></div>`;
+  else if (!n.dataset.toast) n.innerHTML = "";
+  if (view === "history") { const d = $("dataStatus"); if (d) d.innerHTML = dataStatusHtml(); }
+}
+function toastNotice(html, isErr){
+  const n = $("notice");
+  if (!html) { delete n.dataset.toast; n.innerHTML = ""; return; }
+  n.dataset.toast = "1";
+  n.innerHTML = `<div class="notice"${isErr ? ' style="border-color:var(--c6)"' : ""}><span>${html}</span><button class="btn small" data-act="dismiss-notice">OK</button></div>`;
+}
+
+/* ================= Data accessors ================= */
+const live = arr => (arr || []).filter(r => !r.deleted);
+function getDone(p, date = todayStr()){ return db.days[date]?.[p]?.done || []; }
+function setDone(p, ids, date = todayStr()){ db.days[date] = db.days[date] || {}; db.days[date][p] = { done: ids, t: Date.now() }; save(); }
+function dayHours(date){
+  const byCat = {}; let total = 0;
+  Object.values(db.days[date] || {}).forEach(e => (e.done || []).forEach(id => { const b = BLOCKS[id]; if (b) { byCat[b.cat] = (byCat[b.cat] || 0) + b.h; total += b.h; } }));
+  return { total, byCat };
+}
+function upsert(kind, rec){ rec.t = Date.now(); const arr = db[kind]; const i = arr.findIndex(r => r.id === rec.id); i >= 0 ? arr[i] = rec : arr.push(rec); save(); }
+function remove(kind, id){ const r = db[kind].find(x => x.id === id); if (r) { Object.keys(r).forEach(k => { if (!["id"].includes(k)) delete r[k]; }); r.deleted = true; r.t = Date.now(); save(); } }
+function lastInterview(){ return live(db.interviews).map(r => r.date).sort().pop() || ""; }
+function dueReviews(){ const t = todayStr(); return live(db.problems).filter(p => p.review && p.review.next <= t).sort((a, b) => a.review.next < b.review.next ? -1 : 1); }
+
+/* ================= Rendering: phases ================= */
+let view = local.get("view", PHASE_IDS[0]);
+let probFilter = { q:"", kind:"all", tag:"" }, histRange = 30;
+function getStart(p){ return local.get("start-" + p, PHASES[p].start); }
+
+function bar(blocks){ return '<div class="bar">' + blocks.map(b => `<span style="flex:${b.h};background:${b.c}" title="${esc(b.name)}: ${b.h}h"></span>`).join("") + '</div>'; }
+function weekStrip(ph){
+  const limited = ph.blocks.filter(b => b.days); if (!limited.length) return "";
+  const dow = new Date().getDay();
+  return `<div class="week">` + [1,2,3,4,5,6,0].map(d => `<div class="wday ${d === dow ? "today" : ""}"><span>${DAYS[d]}</span><span class="wdots">${
+      limited.filter(b => b.days.includes(d)).map(b => `<i style="background:${b.c}" title="${esc(b.name)}"></i>`).join("") || "<i></i>"}</span></div>`).join("") +
+    `</div><div class="legend">${limited.map(b => `<span class="dot" style="background:${b.c}"></span>${esc(b.name)} on ${dayLabel(b.days)}`).join(" · ")} · everything else every day</div>`;
+}
+const CADENCE = INTERVIEW_MIN % 30 === 0 && INTERVIEW_MAX % 30 === 0 ? `Every ${INTERVIEW_MIN/30}–${INTERVIEW_MAX/30} months` : `Every ${INTERVIEW_MIN}–${INTERVIEW_MAX} days`;
+function interviewCard(){
+  const last = lastInterview(), t = todayStr();
+  let status = `Log your most recent interview to start tracking. Goal: ${CADENCE.toLowerCase()}.`, cls = "";
+  if (last) {
+    const days = daysBetween(last, t);
+    if (days < INTERVIEW_MIN) { status = `${days} days since your last one. Next window opens ${prettyDate(addDays(last,INTERVIEW_MIN))} and closes ${prettyDate(addDays(last,INTERVIEW_MAX))}.`; cls = "ok"; }
+    else if (days <= INTERVIEW_MAX) { status = `${days} days since your last one. You're in the window: line one up before ${prettyDate(addDays(last,INTERVIEW_MAX))}.`; cls = "due"; }
+    else { status = `${days} days since your last one. Overdue, so schedule an interview soon.`; cls = "late"; }
+  }
+  return `<div class="card ${cls}">
+    <div class="card-h"><span class="name">🎯 Stay interview-ready</span><span class="pill">${CADENCE}</span></div>
+    <div class="detail">Take a real interview (or a serious mock) to keep your skills and market sense sharp.</div>
+    <div class="status">${status}</div>
+    <div class="lbl">Log an interview <input type="date" id="intDate" value="${t}"> <button class="btn small" data-act="add-interview">Add</button></div>
+  </div>`;
+}
+function renderPhase(p){
+  const ph = PHASES[p], done = getDone(p), start = getStart(p), dow = new Date().getDay();
+  const todays = ph.blocks.filter(b => !b.days || b.days.includes(dow));
+  const [sh, sm] = start.split(":").map(Number);
+  let t = sh*60 + sm;
+  const total = todays.reduce((s,b) => s + b.h, 0);
+  const doneHrs = todays.reduce((s,b) => s + (done.includes(b.id) ? b.h : 0), 0);
+  const due = dueReviews().length;
+  let html = `<div class="phase-tag">${ph.tag}${ph.blocks.some(b => b.days) ? ` · Today is ${DAYS[dow]}` : ""}</div>`;
+  if (due) html += `<div class="notice"><span>🔁 ${due} problem${due > 1 ? "s" : ""} due for review today.</span><button class="btn small" data-act="goto-problems">Review</button></div>`;
+  html += bar(todays) + `<div class="scale"><span>0h</span><span>${hrs(total)}h today</span></div>` + weekStrip(ph) + `<div class="list">`;
+  todays.forEach(b => {
+    const s = t, e = t + b.h*60; t = e;
+    const isDone = done.includes(b.id);
+    html += `<div class="item ${isDone ? "done" : ""}" data-block="${b.id}" role="checkbox" aria-checked="${isDone}" tabindex="0">
+      <div class="check"></div>
+      <div class="hrs" style="color:${b.c}">${hrs(b.h)}<small>${b.h === 1 ? "hour" : "hours"}</small></div>
+      <div class="body">
+        <div class="name">${b.name}</div>
+        <div class="detail">${b.detail}</div>
+        ${b.weeks ? `<div class="weeks">${b.weeks.map(w => `<span class="pill">${w}</span>`).join("")}</div>` : ""}
+        ${b.days ? `<div class="weeks"><span class="pill">${dayLabel(b.days)} only</span></div>` : ""}
+        <div class="time">${fmt(s)} – ${fmt(e)}</div>
+        <div class="item-actions">
+          <button class="tbtn" data-timer="${b.id}">⏱ Time this block (${Math.round(b.h*60)} min)</button>
+          ${CATS[b.cat].log ? `<button class="tbtn" data-log="${CATS[b.cat].log}">📝 Log ${CATS[b.cat].log === "dsa" ? "problem" : "design"}</button>` : ""}
+        </div>
+      </div>
+    </div>`;
+  });
+  html += `</div>
+  <div class="foot">
+    <label>Start time <input type="time" id="start" value="${start}"></label>
+    <span class="progress">${hrs(doneHrs)} / ${hrs(total)} h done today</span>
+    <button class="reset" data-act="reset-day">Reset today</button>
+  </div>`;
+  if (ph.interview) html += interviewCard();
+  return html;
+}
+function renderCompare(){
+  const col = p => {
+    const ph = PHASES[p], daily = ph.blocks.filter(b => !b.days).reduce((s,b) => s + b.h, 0);
+    return `<div><h2>${ph.title}</h2><div class="phase-tag">${ph.tag} · ${hrs(daily)}h/day</div>${bar(ph.blocks)}<div class="list" style="margin-top:12px">` +
+      ph.blocks.map(b => `<div class="item"><div class="hrs" style="color:${b.c}">${hrs(b.h)}</div>
+        <div class="body"><div class="name"><span class="dot" style="background:${b.c}"></span>${b.name}</div>
+        <div class="detail">${b.detail}${b.days ? ` (${dayLabel(b.days)})` : ""}</div></div></div>`).join("") +
+      (ph.interview ? `<div class="item"><div class="hrs">🎯</div><div class="body"><div class="name">Interview</div><div class="detail">${CADENCE}</div></div></div>` : "") +
+      `</div></div>`;
+  };
+  return `<div class="compare" style="--cols:${Math.min(PHASE_IDS.length, 4)}">${PHASE_IDS.map(col).join("")}</div>`;
+}
+
+/* ================= Rendering: problems ================= */
+function probCard(p, isDue){
+  const url = safeUrl(p.url);
+  const title = esc(p.title || titleFromUrl(p.url) || "Untitled");
+  const resultTxt = { solo:"Solved solo", hint:"Needed a hint", solution:"Saw solution" }[p.result] || "";
+  const reviewTxt = p.review ? (p.review.next <= todayStr() ? "Review due" : "Review " + prettyDate(p.review.next)) : (p.reviews?.length ? "Mastered ✓" : "");
+  return `<div class="prob ${isDue ? "due" : ""}">
+    <div class="prob-top">
+      <div>${url ? `<a href="${esc(url)}" target="_blank" rel="noopener">${title}</a>` : `<b>${title}</b>`}</div>
+      <div class="row-btns">
+        ${isDue ? `<button class="btn small primary" data-review="${p.id}" data-r="solo">Solved solo</button><button class="btn small" data-review="${p.id}" data-r="hint">Struggled</button>` : ""}
+        <button class="btn small" data-edit="${p.id}">Edit</button>
+      </div>
+    </div>
+    <div class="meta">
+      <span class="badge ${p.kind}">${p.kind === "sd" ? "System design" : "DSA"}</span>
+      ${p.diff ? `<span class="badge ${esc(p.diff)}">${esc(p.diff)}</span>` : ""}
+      ${resultTxt ? `<span>${resultTxt}</span>` : ""}
+      <span>· ${prettyDate(p.date)}</span>
+      ${p.min ? `<span>· ${p.min} min</span>` : ""}
+      ${reviewTxt ? `<span>· ${reviewTxt}</span>` : ""}
+      ${(p.tags || []).map(t => `<button class="tag ${probFilter.tag === t ? "on" : ""}" data-tag="${esc(t)}">${esc(t)}</button>`).join("")}
+    </div>
+    ${p.notes ? `<div class="notes">${esc(p.notes)}</div>` : ""}
+  </div>`;
+}
+function renderProblems(){
+  const all = live(db.problems).sort((a, b) => (b.date + (b.created || "")) > (a.date + (a.created || "")) ? 1 : -1);
+  const due = dueReviews();
+  const q = probFilter.q.toLowerCase();
+  const list = all.filter(p => (probFilter.kind === "all" || p.kind === probFilter.kind) && (!probFilter.tag || (p.tags || []).includes(probFilter.tag)) &&
+    (!q || [p.title, p.url, p.notes, ...(p.tags || [])].join(" ").toLowerCase().includes(q)));
+  const dsa = all.filter(p => p.kind === "dsa");
+  const cnt = d => dsa.filter(p => p.diff === d).length;
+  const solo = all.length ? Math.round(all.filter(p => p.result === "solo").length / all.length * 100) : 0;
+  const tagCounts = {}; all.forEach(p => (p.tags || []).forEach(t => tagCounts[t] = (tagCounts[t] || 0) + 1));
+  const topTags = Object.entries(tagCounts).sort((a, b) => b[1] - a[1]).slice(0, 14);
+
+  let html = `<div class="toolbar">
+      <button class="btn primary" data-log="dsa">📝 Log problem</button>
+      <button class="btn" data-log="sd">📝 Log design</button>
+      <input type="search" id="probSearch" placeholder="Search title, tag, notes…" value="${esc(probFilter.q)}">
+      <div class="seg">${[["all","All"],["dsa","DSA"],["sd","System design"]].map(([k,l]) => `<button class="${probFilter.kind === k ? "on" : ""}" data-kind="${k}">${l}</button>`).join("")}</div>
+    </div>
+    <div class="tiles">
+      <div class="tile"><b>${all.length}</b><span>logged in total</span></div>
+      <div class="tile"><b>${cnt("Easy")}·${cnt("Medium")}·${cnt("Hard")}</b><span>Easy · Medium · Hard</span></div>
+      <div class="tile"><b>${all.filter(p => p.kind === "sd").length}</b><span>system designs</span></div>
+      <div class="tile"><b>${solo}%</b><span>solved without help</span></div>
+    </div>`;
+  if (topTags.length) html += `<div class="sec" style="margin-top:14px"><div class="meta" style="display:flex;gap:6px;flex-wrap:wrap">${topTags.map(([t, n]) => `<button class="tag ${probFilter.tag === t ? "on" : ""}" data-tag="${esc(t)}">${esc(t)} · ${n}</button>`).join("")}${probFilter.tag ? `<button class="tag" data-tag="">✕ clear</button>` : ""}</div></div>`;
+  if (due.length) html += `<div class="sec"><h2>🔁 Due for review <small>${due.length}</small></h2>${due.map(p => probCard(p, true)).join("")}</div>`;
+  html += `<div class="sec"><h2>Log <small>${list.length} shown</small></h2>`;
+  html += list.length ? list.map(p => probCard(p, false)).join("") : `<div class="empty">${all.length ? "No matches." : "Nothing logged yet. Hit “📝 Log problem” after you finish one: paste the link and the name fills in."}</div>`;
+  return html + `</div>`;
+}
+
+/* ================= Rendering: history ================= */
+function activeDay(d){ return dayHours(d).total > 0 || live(db.problems).some(p => p.date === d) || live(db.sessions).some(s => s.date === d && s.actual >= 300); }
+function lcDay(d){ const bc = dayHours(d).byCat; return Object.keys(bc).some(c => CATS[c]?.log === "dsa" && bc[c] > 0) || live(db.problems).some(p => p.date === d && p.kind === "dsa"); }
+function streak(test){ let d = todayStr(), n = 0; if (!test(d)) d = addDays(d, -1); while (test(d)) { n++; d = addDays(d, -1); } return n; }
+function dataStatusHtml(){
+  const s = statusInfo();
+  if (fileState === "unsupported") return `<p class="muted" style="font-size:13.5px;margin:0 0 10px">${IN_FRAME ? "This online copy can't save to a file on your computer. Use the downloaded page for that." : "This browser can't save straight to a file (Chrome and Edge can)."} Your history is kept in this browser; use Export below to back it up.</p>`;
+  if (fileState === "ok") return `<p style="font-size:13.5px;margin:0 0 10px">💾 Saving to <b>${esc(fileHandle.name)}</b>. Last synced ${new Date(lastSync || Date.now()).toLocaleTimeString()}. Put that file in Dropbox, iCloud Drive, Syncthing or a Git repo to share it between computers.</p>
+    <div class="row-btns"><button class="btn small" data-act="sync-now">Sync now</button><button class="btn small" data-act="open-file">Switch file</button><button class="btn small danger" data-act="disconnect">Disconnect</button></div>`;
+  if (fileState === "perm") return `<p style="font-size:13.5px;margin:0 0 10px">Chrome needs your OK to keep saving to <b>${esc(fileHandle?.name || "history.json")}</b>.</p><div class="row-btns"><button class="btn small primary" data-act="reconnect">Allow</button><button class="btn small danger" data-act="disconnect">Disconnect</button></div>`;
+  return `<p style="font-size:13.5px;margin:0 0 10px">${fileState === "error" ? "⚠ " + esc(fileErr) : "Your history is only in this browser right now. Pick where to keep it: a new file, or the history.json you already use on another computer."}</p>
+    <div class="row-btns"><button class="btn small primary" data-act="new-file">Create history.json</button><button class="btn small" data-act="open-file">Open existing file</button></div>`;
+}
+function renderHistory(){
+  const t = todayStr();
+  const range = histRange;
+  const from = range ? addDays(t, -(range - 1)) : "0000-00-00";
+  const inRange = d => d >= from && d <= t;
+  const catH = {}, catT = {};
+  Object.keys(db.days).filter(inRange).forEach(d => { const h = dayHours(d).byCat; Object.entries(h).forEach(([c, v]) => catH[c] = (catH[c] || 0) + v); });
+  live(db.sessions).filter(s => inRange(s.date)).forEach(s => { const c = s.cat || "_"; catT[c] = (catT[c] || 0) + s.actual; });
+  const maxH = Math.max(1, ...Object.values(catH));
+  const probs = live(db.problems).filter(p => inRange(p.date));
+  const totalH = Object.values(catH).reduce((a, b) => a + b, 0);
+
+  // Heatmap: last 18 weeks, Monday-first
+  const weeks = 18, start = new Date(); start.setDate(start.getDate() - ((start.getDay() + 6) % 7) - (weeks - 1) * 7);
+  let heat = `<div class="heat">`;
+  for (let w = 0; w < weeks; w++) {
+    heat += `<div class="heat-col">`;
+    for (let i = 0; i < 7; i++) {
+      const d = new Date(start); d.setDate(start.getDate() + w*7 + i); const s = ymd(d);
+      if (s > t) { heat += `<div class="heat-cell future"></div>`; continue; }
+      const h = dayHours(s).total, np = live(db.problems).filter(p => p.date === s).length;
+      const lvl = h === 0 ? (np ? 1 : 0) : h < 1.5 ? 1 : h < 3 ? 2 : h < 5 ? 3 : 4;
+      heat += `<div class="heat-cell ${lvl ? "l" + lvl : ""} ${s === t ? "is-today" : ""}" title="${prettyDate(s)}: ${hrs(h)}h checked off${np ? `, ${np} problem${np > 1 ? "s" : ""}` : ""}"></div>`;
+    }
+    heat += `</div>`;
+  }
+  heat += `</div><div class="heat-legend">Less <span class="heat-cell"></span><span class="heat-cell l1"></span><span class="heat-cell l2"></span><span class="heat-cell l3"></span><span class="heat-cell l4"></span> More · hours checked off per day</div>`;
+
+  const sessions = live(db.sessions).sort((a, b) => b.start - a.start).slice(0, 12);
+  const interviews = live(db.interviews).sort((a, b) => b.date < a.date ? -1 : 1);
+
+  return `<div class="tiles">
+      <div class="tile"><b>${streak(activeDay)}</b><span>day streak</span></div>
+      <div class="tile"><b>${streak(lcDay)}</b><span>DSA streak</span></div>
+      <div class="tile"><b>${probs.length}</b><span>problems ${range ? `· last ${range}d` : "· all time"}</span></div>
+      <div class="tile"><b>${hrs(totalH)}h</b><span>checked off ${range ? `· last ${range}d` : ""}</span></div>
+    </div>
+
+    <div class="sec"><h2>Activity <small>last ${weeks} weeks</small></h2>${heat}</div>
+
+    <div class="sec"><h2>Time by area
+      <span class="seg">${[[7,"7d"],[30,"30d"],[90,"90d"],[0,"All"]].map(([v,l]) => `<button class="${histRange === v ? "on" : ""}" data-range="${v}">${l}</button>`).join("")}</span></h2>
+      ${Object.keys(CATS).map(c => `<div class="cat-row"><span><span class="dot" style="background:${CATS[c].c}"></span>${CATS[c].name}</span>
+        <div class="cat-bar"><i style="width:${(catH[c] || 0) / maxH * 100}%;background:${CATS[c].c}"></i></div>
+        <span class="num">${hrs(catH[c] || 0)}h${catT[c] ? ` · ⏱${dur(catT[c])}` : ""}</span></div>`).join("")}
+      <div class="muted" style="font-size:12px">Hours = blocks you checked off. ⏱ = time actually run on the timer.</div>
+    </div>
+
+    <div class="sec"><h2>Timer sessions <small>most recent</small></h2>
+      ${sessions.length ? `<table class="table"><tr><th>Date</th><th>What</th><th>Ran</th><th>Planned</th></tr>${sessions.map(s =>
+        `<tr><td>${prettyDate(s.date)}</td><td>${esc(s.label || "Free timer")}</td><td>${dur(s.actual)}${s.completed ? " ✓" : ""}</td><td>${s.planned}m</td></tr>`).join("")}</table>`
+        : `<div class="empty">Timer runs of a minute or more show up here.</div>`}
+    </div>
+
+    <div class="sec"><h2>Interviews <small>aim for one ${CADENCE.toLowerCase()}</small></h2>
+      <div class="lbl" style="margin-bottom:10px">Add <input type="date" id="intDate" value="${t}"> <button class="btn small" data-act="add-interview">Add</button></div>
+      ${interviews.length ? `<table class="table">${interviews.map((r, i) => {
+        const gap = interviews[i+1] ? daysBetween(interviews[i+1].date, r.date) : null;
+        return `<tr><td>${prettyDate(r.date)}</td><td class="muted">${gap !== null ? gap + " days after the previous one" : "first logged"}</td><td style="text-align:right"><button class="btn small danger" data-del-int="${r.id}">Remove</button></td></tr>`; }).join("")}</table>`
+        : `<div class="empty">No interviews logged yet.</div>`}
+    </div>
+
+    <div class="sec"><h2>Your data</h2>
+      <div id="dataStatus">${dataStatusHtml()}</div>
+      <div class="row-btns" style="margin-top:12px">
+        <button class="btn small" data-act="export-json">Export backup (.json)</button>
+        <button class="btn small" data-act="copy-json">Copy backup</button>
+        <button class="btn small" data-act="export-csv">Problems (.csv)</button>
+        <button class="btn small" data-act="export-days">Daily hours (.csv)</button>
+        <button class="btn small" data-act="import">Import / merge backup</button>
+      </div>
+    </div>`;
+}
+
+/* ================= Problem modal ================= */
+function openProblem(opts = {}){
+  const p = opts.id ? { ...live(db.problems).find(x => x.id === opts.id) } : { kind: opts.kind || "dsa", date: todayStr(), result: "solo", min: opts.min || "" };
+  const isNew = !opts.id;
+  $("modal").innerHTML = `<h3>${isNew ? "Log a" : "Edit"} ${p.kind === "sd" ? "system design" : "problem"}</h3>
+    <form id="probForm">
+      <div class="field">Type <div class="seg" id="kindSeg">${[["dsa","DSA / LeetCode"],["sd","System design"]].map(([k,l]) => `<button type="button" class="${p.kind === k ? "on" : ""}" data-k="${k}">${l}</button>`).join("")}</div></div>
+      <label class="field">Link <input name="url" type="url" placeholder="https://leetcode.com/problems/two-sum/" value="${esc(p.url || "")}" autocomplete="off"></label>
+      <label class="field">Name <input name="title" placeholder="Filled in from the link" value="${esc(p.title || "")}"></label>
+      <div class="two">
+        <label class="field" id="diffField" style="${p.kind === "sd" ? "display:none" : ""}">Difficulty
+          <select name="diff">${["", "Easy", "Medium", "Hard"].map(d => `<option ${p.diff === d ? "selected" : ""} value="${d}">${d || "—"}</option>`).join("")}</select></label>
+        <label class="field">How did it go?
+          <select name="result">${[["solo","Solved solo"],["hint","Needed a hint"],["solution","Saw the solution"]].map(([v,l]) => `<option ${p.result === v ? "selected" : ""} value="${v}">${l}</option>`).join("")}</select></label>
+      </div>
+      <div class="two">
+        <label class="field">Minutes spent <input name="min" type="number" min="0" value="${esc(p.min || "")}"></label>
+        <label class="field">Date <input name="date" type="date" value="${esc(p.date)}"></label>
+      </div>
+      <label class="field">Tags <input name="tags" placeholder="sliding window, two pointers" value="${esc((p.tags || []).join(", "))}"></label>
+      <label class="field">Notes <textarea name="notes" placeholder="Key insight, mistakes, what to remember">${esc(p.notes || "")}</textarea></label>
+      <label class="check-line"><input type="checkbox" name="review" ${isNew ? (p.result !== "solo" ? "checked" : "") : (p.review ? "checked" : "")}> Add to review list (comes back after 3, 7, then 30 days)</label>
+      <div class="actions">
+        ${isNew ? "" : `<button type="button" class="btn danger" id="delProb" style="margin-right:auto">Delete</button>`}
+        <button type="button" class="btn" id="cancelProb">Cancel</button>
+        <button type="submit" class="btn primary">Save</button>
+      </div>
+    </form>`;
+  $("overlay").classList.add("open");
+  const f = $("probForm");
+  let kind = p.kind, titleTouched = !!p.title;
+  f.url.oninput = () => { if (!titleTouched) f.title.value = titleFromUrl(f.url.value.trim()); if (/hellointerview|excalidraw|system-design/i.test(f.url.value) && kind !== "sd") setKind("sd"); };
+  f.title.oninput = () => { titleTouched = !!f.title.value; };
+  f.result.onchange = () => { if (isNew) f.review.checked = f.result.value !== "solo"; };
+  const setKind = k => { kind = k; $("kindSeg").querySelectorAll("button").forEach(b => b.classList.toggle("on", b.dataset.k === k)); $("diffField").style.display = k === "sd" ? "none" : ""; };
+  $("kindSeg").querySelectorAll("button").forEach(b => b.onclick = () => setKind(b.dataset.k));
+  $("cancelProb").onclick = closeModal;
+  if (!isNew) $("delProb").onclick = e => { if (e.target.dataset.sure) { remove("problems", p.id); closeModal(); render(); } else { e.target.dataset.sure = 1; e.target.textContent = "Really delete?"; } };
+  f.onsubmit = e => {
+    e.preventDefault();
+    const url = f.url.value.trim(), title = f.title.value.trim() || titleFromUrl(url);
+    if (!url && !title) { f.url.focus(); return; }
+    const rec = { ...p, id: p.id || uid(), created: p.created || new Date().toISOString(), kind, url, title,
+      diff: kind === "sd" ? "" : f.diff.value, result: f.result.value, min: +f.min.value || 0, date: f.date.value || todayStr(),
+      tags: f.tags.value.split(",").map(s => s.trim().toLowerCase()).filter(Boolean), notes: f.notes.value.trim() };
+    if (f.review.checked) rec.review = p.review || { stage: 0, next: addDays(rec.date, REVIEW_STEPS[0]) };
+    else rec.review = null;
+    upsert("problems", rec);
+    closeModal(); render();
+  };
+  setTimeout(() => (isNew ? f.url : f.title).focus(), 30);
+}
+function closeModal(){ $("overlay").classList.remove("open"); $("modal").innerHTML = ""; }
+$("overlay").addEventListener("mousedown", e => { if (e.target === $("overlay")) closeModal(); });
+document.addEventListener("keydown", e => { if (e.key === "Escape" && $("overlay").classList.contains("open")) closeModal(); });
+
+function doReview(id, r){
+  const p = live(db.problems).find(x => x.id === id); if (!p || !p.review) return;
+  const rec = { ...p, reviews: [...(p.reviews || []), { date: todayStr(), result: r }] };
+  if (r === "solo") { const stage = p.review.stage + 1; rec.review = stage >= REVIEW_STEPS.length ? null : { stage, next: addDays(todayStr(), REVIEW_STEPS[stage]) }; }
+  else rec.review = { stage: 0, next: addDays(todayStr(), REVIEW_STEPS[0]) };
+  upsert("problems", rec); render();
+}
+
+/* ================= Export / import ================= */
+function download(name, text, type){
+  try { const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([text], { type })); a.download = name; document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1000); }
+  catch(e) { toastNotice("Downloads are blocked here. Use “Copy backup” instead.", true); }
+}
+const csvCell = v => { const s = String(v ?? ""); return /[",\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s; };
+function problemsCsv(){
+  const rows = [["date","type","title","url","difficulty","result","minutes","tags","notes","next_review"]];
+  live(db.problems).sort((a, b) => a.date < b.date ? -1 : 1).forEach(p => rows.push([p.date, p.kind === "sd" ? "system design" : "dsa", p.title, p.url, p.diff, p.result, p.min, (p.tags || []).join("; "), p.notes, p.review?.next || ""]));
+  return rows.map(r => r.map(csvCell).join(",")).join("\n");
+}
+function daysCsv(){
+  const cats = Object.keys(CATS), rows = [["date", "total_hours", ...cats.map(c => CATS[c].name)]];
+  Object.keys(db.days).sort().forEach(d => { const h = dayHours(d); if (h.total) rows.push([d, h.total, ...cats.map(c => h.byCat[c] || 0)]); });
+  return rows.map(r => r.map(csvCell).join(",")).join("\n");
+}
+$("importFile").onchange = async e => {
+  const file = e.target.files[0]; e.target.value = ""; if (!file) return;
+  try { const other = JSON.parse(await file.text()); if (!other.days) throw new Error("not a Daily Breakdown backup");
+    db = mergeDB(db, other); save(); render(); toastNotice("Backup merged into your history."); }
+  catch(err) { toastNotice("Couldn't import that file: " + esc(err.message), true); }
+};
+
+/* ================= Timer ================= */
+const PRESETS = (Array.isArray(CONFIG.timerPresets) ? CONFIG.timerPresets : [5, 15, 25, 30, 45, 60]).filter(m => m > 0);
+const timer = (() => {
+  let st = local.get("timer", null);
+  if (!st || (st.link && !st.link.id)) st = { total: 25*60, left: 25*60, endAt: null, label: "", link: null };
+  let tick = null, audio = null;
+  const persist = () => local.set("timer", st);
+  const remaining = () => st.endAt ? Math.max(0, Math.round((st.endAt - Date.now())/1000)) : st.left;
+  const ranSec = () => (st.sess ? st.sess.ran + (st.sess.resumedAt ? (Math.min(Date.now(), st.endAt || Date.now()) - st.sess.resumedAt) / 1000 : 0) : 0);
+  const mmss = sec => { const h = Math.floor(sec/3600), m = Math.floor(sec%3600/60), s = sec%60;
+    return (h ? h + ":" + String(m).padStart(2,"0") : String(m).padStart(2,"0")) + ":" + String(s).padStart(2,"0"); };
+  function beep(){
+    try {
+      audio = audio || new (window.AudioContext || window.webkitAudioContext)();
+      [0, .35, .7, 1.4, 1.75, 2.1].forEach(t => {
+        const o = audio.createOscillator(), g = audio.createGain();
+        o.frequency.value = 880; o.connect(g); g.connect(audio.destination);
+        g.gain.setValueAtTime(0.0001, audio.currentTime + t);
+        g.gain.exponentialRampToValueAtTime(0.3, audio.currentTime + t + .02);
+        g.gain.exponentialRampToValueAtTime(0.0001, audio.currentTime + t + .25);
+        o.start(audio.currentTime + t); o.stop(audio.currentTime + t + .3);
+      });
+    } catch(e){}
+  }
+  function endSession(completed){
+    if (!st.sess) return;
+    const actual = Math.round(ranSec());
+    if (actual >= 60) {
+      const b = st.link ? BLOCKS[st.link.id] : null;
+      db.sessions.push({ id: uid(), t: Date.now(), date: ymd(new Date(st.sess.start)), start: st.sess.start, label: st.label || "", cat: b ? b.cat : null,
+        planned: Math.round(st.total/60), actual, completed: !!completed });
+      save();
+    }
+    st.lastRan = actual; st.sess = null; persist();
+  }
+  function draw(){
+    const r = remaining(), running = !!st.endAt;
+    $("tClock").textContent = mmss(r);
+    $("tLabel").textContent = st.label || "Countdown timer";
+    $("tStart").textContent = running ? "Pause" : (r < st.total && r > 0 ? "Resume" : "Start");
+    $("tBar").style.width = (st.total ? (1 - r/st.total)*100 : 0) + "%";
+    document.title = running ? "⏱ " + mmss(r) + (st.label ? " · " + st.label : "") : APP_NAME;
+    document.querySelectorAll("#tPresets .chip[data-m]").forEach(c => c.classList.toggle("on", +c.dataset.m*60 === st.total && !st.label));
+    $("tMark").style.display = st.link ? "" : "none";
+  }
+  function finish(){
+    clearInterval(tick); tick = null;
+    if (st.sess && st.sess.resumedAt) { st.sess.ran += Math.max(0, (st.endAt - st.sess.resumedAt) / 1000); st.sess.resumedAt = null; }
+    st.endAt = null; st.left = 0;
+    endSession(true);
+    $("timer").classList.add("finished");
+    beep(); draw();
+    if (view === "history") render();
+  }
+  function loop(){ clearInterval(tick); tick = setInterval(() => { if (remaining() <= 0) finish(); else draw(); }, 250); }
+  const api = {
+    load(min, label = "", link = null){
+      if (st.endAt) api.pause();
+      endSession(false);
+      clearInterval(tick); tick = null;
+      $("timer").classList.remove("finished");
+      st = { total: Math.round(min*60), left: Math.round(min*60), endAt: null, label, link, sess: null };
+      persist(); draw();
+    },
+    start(){
+      try { audio = audio || new (window.AudioContext || window.webkitAudioContext)(); audio.resume(); } catch(e){}
+      $("timer").classList.remove("finished");
+      if (st.left <= 0) st.left = st.total;
+      if (!st.sess) st.sess = { start: Date.now(), ran: 0, resumedAt: null };
+      st.sess.resumedAt = Date.now();
+      st.endAt = Date.now() + st.left*1000; persist(); loop(); draw();
+    },
+    pause(){
+      st.left = remaining();
+      if (st.sess && st.sess.resumedAt) { st.sess.ran += (Date.now() - st.sess.resumedAt) / 1000; st.sess.resumedAt = null; }
+      st.endAt = null; persist(); clearInterval(tick); tick = null; draw();
+    },
+    toggle(){ st.endAt ? api.pause() : api.start(); },
+    reset(){ api.load(st.total/60, st.label, st.link); },
+    plus(){ if (st.endAt) st.endAt += 60000; else st.left += 60; st.total += 60; persist(); draw(); },
+    minutesSpent(){ return Math.round((st.sess ? ranSec() : (st.lastRan || 0)) / 60); },
+    kind(){ const b = st.link ? BLOCKS[st.link.id] : null; return b && CATS[b.cat].log === "sd" ? "sd" : "dsa"; },
+    link(){ return st.link; },
+  };
+  const box = $("tPresets");
+  PRESETS.forEach(m => {
+    const c = document.createElement("button");
+    c.className = "chip"; c.dataset.m = m; c.textContent = m + "m";
+    c.onclick = () => api.load(m);
+    box.insertBefore(c, box.querySelector(".t-custom"));
+  });
+  $("tCustom").onchange = e => { const m = Math.min(600, Math.max(1, +e.target.value || 0)); if (m) api.load(m, ""); e.target.value = ""; };
+  $("tCustom").onkeydown = e => { if (e.key === "Enter") e.target.dispatchEvent(new Event("change")); };
+  $("tStart").onclick = api.toggle;
+  $("tReset").onclick = api.reset;
+  $("tPlus").onclick = api.plus;
+  $("tDismiss").onclick = () => { $("timer").classList.remove("finished"); api.reset(); };
+  $("tMark").onclick = () => {
+    const b = BLOCKS[st.link.id], d = getDone(b.p);
+    if (!d.includes(b.id)) setDone(b.p, [...d, b.id]);
+    $("timer").classList.remove("finished"); api.reset();
+    render();
+  };
+  const logFromTimer = () => openProblem({ kind: api.kind(), min: api.minutesSpent() || "" });
+  $("tLog").onclick = logFromTimer; $("tLog2").onclick = logFromTimer;
+  if (st.endAt) { if (remaining() <= 0) finish(); else loop(); }
+  draw();
+  return api;
+})();
+
+/* ================= Main render + events ================= */
+function render(){
+  if (!PHASES[view] && !RESERVED_VIEWS.includes(view)) view = PHASE_IDS[0];
+  renderTabs();
+  document.querySelectorAll(".tab").forEach(t => t.setAttribute("aria-selected", t.dataset.view === view));
+  document.querySelector(".wrap").classList.toggle("wide", view === "compare" && PHASE_IDS.length > 2);
+  document.querySelector(".wrap").classList.toggle("nostick", !PHASES[view]);
+  const el = $("view");
+  const focusSearch = document.activeElement && document.activeElement.id === "probSearch";
+  el.innerHTML = configErrorsHtml() + (view === "compare" ? renderCompare() : view === "problems" ? renderProblems() : view === "history" ? renderHistory() : renderPhase(view));
+  if (focusSearch) { const s = $("probSearch"); s.focus(); s.setSelectionRange(s.value.length, s.value.length); }
+  const st = $("start"); if (st) st.onchange = e => { local.set("start-" + view, e.target.value || PHASES[view].start); render(); };
+  const ps = $("probSearch"); if (ps) ps.oninput = e => { probFilter.q = e.target.value; render(); };
+  updateStatus();
+}
+
+function renderTabs(){
+  const tabs = $("tabs"), items = [...PHASE_IDS.map(id => [id, PHASES[id].title]), ["problems","Problems"], ["history","History"], ["compare","Compare"]];
+  const sig = items.map(x => x.join(":")).join("|");
+  if (tabs.dataset.sig !== sig) {
+    tabs.dataset.sig = sig;
+    tabs.style.setProperty("--tabs", items.length);
+    tabs.innerHTML = items.map(([id, label]) => `<button class="tab" role="tab" data-view="${esc(id)}">${esc(label)}</button>`).join("");
+  }
+  tabs.querySelectorAll(".tab").forEach(t => t.setAttribute("aria-selected", t.dataset.view === view));
+}
+function configErrorsHtml(){
+  if (!CONFIG_ERRORS.length) return "";
+  return `<div class="notice" style="border-color:var(--c6);background:color-mix(in srgb,var(--c6) 12%,var(--card));display:block"><b>There's a problem in the CONFIG section of the HTML file:</b><ul style="margin:6px 0 0;padding-left:18px">${
+    CONFIG_ERRORS.map(e => `<li>${esc(e)}</li>`).join("")}</ul></div>`;
+}
+function toggleBlock(id){ const b = BLOCKS[id], d = getDone(b.p); setDone(b.p, d.includes(id) ? d.filter(x => x !== id) : [...d, id]); render(); }
+
+document.addEventListener("click", async e => {
+  const t = e.target.closest("button, .item[data-block]"); if (!t) return;
+  const ds = t.dataset;
+  if (t.classList.contains("tab")) { view = ds.view; local.set("view", view); render(); return; }
+  if (ds.timer) { e.stopPropagation(); const b = BLOCKS[ds.timer]; timer.load(b.h*60, b.name, { id: b.id }); timer.start(); $("timer").scrollIntoView({ behavior:"smooth", block:"nearest" }); return; }
+  if (ds.log) { const l = timer.link(); openProblem({ kind: ds.log, min: l && CATS[BLOCKS[l.id]?.cat]?.log === ds.log ? (timer.minutesSpent() || "") : "" }); return; }
+  if (ds.block) { toggleBlock(ds.block); return; }
+  if (ds.edit) { openProblem({ id: ds.edit }); return; }
+  if (ds.review) { doReview(ds.review, ds.r); return; }
+  if (ds.tag !== undefined) { probFilter.tag = probFilter.tag === ds.tag ? "" : ds.tag; if (view !== "problems") { view = "problems"; local.set("view", view); } render(); return; }
+  if (ds.kind) { probFilter.kind = ds.kind; render(); return; }
+  if (ds.range !== undefined) { histRange = +ds.range; render(); return; }
+  if (ds.delInt) { if (ds.sure) { remove("interviews", ds.delInt); render(); } else { ds.sure = 1; t.textContent = "Sure?"; } return; }
+  if (t.id === "statusPill") { view = "history"; local.set("view", view); render(); setTimeout(() => $("dataStatus")?.scrollIntoView({ behavior:"smooth", block:"center" }), 50); return; }
+  switch (ds.act) {
+    case "reset-day": setDone(view, []); render(); break;
+    case "goto-problems": view = "problems"; local.set("view", view); render(); break;
+    case "add-interview": { const v = $("intDate").value; if (v && !live(db.interviews).some(r => r.date === v)) { upsert("interviews", { id: uid(), date: v }); } render(); break; }
+    case "new-file": connectFile("new"); break;
+    case "open-file": connectFile("open"); break;
+    case "reconnect": reconnect(); break;
+    case "disconnect": if (ds.sure) disconnectFile(); else { ds.sure = 1; t.textContent = "Really disconnect?"; } break;
+    case "sync-now": await sync(); render(); break;
+    case "setup-later": local.set("setupLater", true); updateStatus(); break;
+    case "dismiss-notice": toastNotice(""); updateStatus(); break;
+    case "export-json": download("daily-breakdown-backup-" + todayStr() + ".json", serialize(db), "application/json"); break;
+    case "copy-json": try { await navigator.clipboard.writeText(serialize(db)); toastNotice("Backup copied. Paste it into a .json file to keep it."); } catch(err) { toastNotice("Couldn't copy here.", true); } break;
+    case "export-csv": download("problems-" + todayStr() + ".csv", problemsCsv(), "text/csv"); break;
+    case "export-days": download("daily-hours-" + todayStr() + ".csv", daysCsv(), "text/csv"); break;
+    case "import": $("importFile").click(); break;
+  }
+});
+document.addEventListener("keydown", e => {
+  const it = e.target.closest && e.target.closest(".item[data-block]");
+  if (it && e.target === it && (e.key === " " || e.key === "Enter")) { e.preventDefault(); toggleBlock(it.dataset.block); }
+});
+// Re-render after midnight so "today" rolls over in an all-day window.
+let renderedDay = todayStr();
+setInterval(() => { if (todayStr() !== renderedDay) { renderedDay = todayStr(); render(); } }, 60000);
+
+$("appName").textContent = "🕒 " + APP_NAME; document.title = APP_NAME;
+render();
+initFile();
+</script>
+</body>
+</html>
